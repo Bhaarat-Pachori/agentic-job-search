@@ -1,0 +1,48 @@
+name: Daily Job Agent Run
+
+on:
+  schedule:
+    # Runs every day at 12:00 AM UTC (adjust as needed)
+    # Use crontab syntax: https://crontab.guru/
+    - cron: '0 0 * * *' 
+  workflow_dispatch: # Allows manual triggering from GitHub UI
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest # Use a standard Linux runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Action to get your code
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Or your preferred Python version
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi # Use requirements.txt
+          # Or install manually if requirements.txt is not preferred for Actions:
+          # pip install langgraph langchain-google-genai langchain-google-community pypdf python-dotenv google-generativeai
+
+      - name: Run the job agent script
+        env: # Make secrets available as environment variables
+          LANGSMITH_TRACING: ${{ secrets.LANGSMITH_TRACING }}
+          LANGSMITH_ENDPOINT: ${{ secrets.LANGSMITH_ENDPOINT }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          LANGSMITH_PROJECT: ${{ secrets.LANGSMITH_PROJECT }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
+        run: python agent.py
+
+      - name: Upload Job Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: job-report # Name of the artifact zip file
+          path: job_report.txt # Path to the file to upload
+
+      # --- TODO: Add a step here to DO something with the report ---
+      # For example: Email it, save it as an artifact, etc.
+      # We'll add this next.

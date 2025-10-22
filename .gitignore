@@ -1,0 +1,12 @@
+# This is a comment, useful for explaining why you ignore certain files.
+
+# Ignore a specific file
+.env
+
+# Ignore a specific file used by macOS
+.DS_Store
+
+# Ignore all files with the '.sh' extension
+*.sh
+
+.venv/

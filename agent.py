@@ -19,13 +19,6 @@ import json # For handling potential JSON errors
 # --- NEW: Import LangGraph components ---
 from langgraph.graph import StateGraph, END
 
-# print("\n--- DETAILED ENV VAR CHECK ---")
-# print(f"LANGSMITH_TRACING: {os.environ.get('LANGSMITH_TRACING')}")
-# print(f"LANGSMITH_ENDPOINT: {os.environ.get('LANGSMITH_ENDPOINT')}")
-# api_key_check = os.environ.get('LANGSMITH_API_KEY')
-# print(f"LANGSMITH_API_KEY: ...{api_key_check[-5:]}" if api_key_check else "Not Set") 
-# print(f"LANGSMITH_PROJECT: {os.environ.get('LANGSMITH_PROJECT')}") # <-- Should print JobAgent
-# print("-----------------------------\n")
 
 # ==================================================================
 # 1. DEFINE OUR AGENT'S "STATE"
@@ -93,19 +86,6 @@ def search_for_jobs(state: AgentState):
     if not queries:
         print("No search queries found in state.")
         return {"job_listings": []}
-
-    # --- CHANGE HERE: Explicitly load keys ---
-    # try:
-        # api_key = os.environ["GOOGLE_API_KEY"]
-        # cse_id = os.environ["GOOGLE_CSE_ID"]
-        
-        # Pass keys directly during instantiation
-        # search = GoogleSearchAPIWrapper(google_api_key=api_key, google_cse_id=cse_id)
-        
-    # except KeyError:
-    #     print("ERROR: GOOGLE_API_KEY or GOOGLE_CSE_ID not found in environment variables!")
-    #     return {"job_listings": []}
-    # --- END CHANGE ---
 
     try:
         # Instantiate WITHOUT explicitly passing keys
@@ -318,7 +298,7 @@ app = workflow.compile()
 
 
 # ==================================================================
-# 5. RUN THE GRAPH (Updated Quick Test)
+# 5. RUN THE GRAPH and SAVE THE REPORT
 # ==================================================================
 if __name__ == "__main__":
     # --- Optional: Comment out for cleaner output ---
@@ -354,6 +334,20 @@ if __name__ == "__main__":
     final_state = app.invoke(graph_input)
 
     print("\n--- Agent Run Complete ---")
+
+    # --- Get the report text ---
+    report_text = final_state.get("final_report", "Error: Report key not found in final state.")
+
+    report_filename = "job_report.txt"
+    try:
+        with open(report_filename, "w", encoding="utf-8") as f:
+            f.write(report_text)
+        print(f"Report successfully saved to {report_filename}")
+    except Exception as e:
+        print(f"Error saving report to file: {e}")
+        # As a fallback, print the report if saving fails
+        print("\n--- Final Report (Fallback Print) ---")
+        print(report_text)
     
     print("\n--- Final Report Output ---")
     # The final report is in the 'final_report' key of the output state
